@@ -2,7 +2,7 @@
 	Name					Data passed			   Description
 
 	Managed Events:
-	 search:locationfound	{latlng, title, layer} fired after moved and show markerLocation
+	 search:locationfound	{latlng, title, layer, data} fired after moved and show markerLocation
 	 search:expanded		{}					   fired after control was expanded
 	 search:collapsed		{}					   fired after control was collapsed
 
@@ -128,6 +128,7 @@ L.Control.Search = L.Control.extend({
 		this._countertips = 0;		//number of tips items
 		this._recordsCache = {};	//key,value table! to store locations! format: key,latlng
 		this._curReq = null;
+    this._recordsData = {};
 	},
 
 	onAdd: function (map) {
@@ -471,11 +472,15 @@ L.Control.Search = L.Control.extend({
 			i, jsonret = {};
 
 		if( L.Util.isArray(propLoc) )
-			for(i in json)
+			for(i in json) {
 				jsonret[ self._getPath(json[i],propName) ]= L.latLng( json[i][ propLoc[0] ], json[i][ propLoc[1] ] );
+				self._recordsData[ self._getPath(json[i],propName) ] = json[i];
+      }
 		else
-			for(i in json)
+			for(i in json) {
 				jsonret[ self._getPath(json[i],propName) ]= L.latLng( self._getPath(json[i],propLoc) );
+				self._recordsData[ self._getPath(json[i],propName) ] = json[i];
+      }
 		//TODO throw new Error("propertyName '"+propName+"' not found in JSON data");
 		return jsonret;
 	},
@@ -757,9 +762,9 @@ L.Control.Search = L.Control.extend({
 			else if(this.options.url)	//jsonp or ajax
 				this._retrieveData = this.options.jsonpParam ? this._recordsFromJsonp : this._recordsFromAjax;
 
-			this._curReq = this._retrieveData.call(this, inputText, function(data) {
+			this._curReq = this._retrieveData.call(self, inputText, function(data) {
 				
-				self._recordsCache = self._formatData.call(this, data);
+				self._recordsCache = self._formatData.call(self, data);
 
 				//TODO refact!
 				if(self.options.sourceData)
@@ -836,11 +841,13 @@ L.Control.Search = L.Control.extend({
 					this.showAlert();
 				else
 				{
+          var data = this._recordsData[this._input.value];
 					this.showLocation(loc, this._input.value);
 					this.fire('search:locationfound', {
 							latlng: loc,
 							text: this._input.value,
-							layer: loc.layer ? loc.layer : null
+							layer: loc.layer ? loc.layer : null,
+              data: data
 						});
 				}
 			}
@@ -990,5 +997,4 @@ L.control.search = function (options) {
 return L.Control.Search;
 
 });
-
 
