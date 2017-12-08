@@ -95,7 +95,8 @@ L.Control.Search = L.Control.extend({
 				stroke: true,
 				fill: false
 			}
-		}
+		},
+    showMarker: true
 	},
 
 	_getPath: function(obj, prop) {
@@ -874,7 +875,7 @@ L.Control.Search = L.Control.extend({
 
 		self._map.once('moveend zoomend', function(e) {
 
-			if(self._markerSearch) {
+			if(self._markerSearch && self.options.showMarker) {
 				self._markerSearch.addTo(self._map).setLatLng(latlng);
 			}
 			
